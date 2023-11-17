@@ -1,25 +1,23 @@
-// pub use exports the structures into the parent module
-// remove the need to access the files directly from outside the module
-pub clip_id;
+mod clip_id;
 pub use clip_id::ClipId;
 
-pub shortcode;
+mod shortcode;
 pub use shortcode::ShortCode;
 
-pub content;
+mod content;
 pub use content::Content;
 
-pub title;
+mod title;
 pub use title::Title;
 
-pub posted;
+mod posted;
 pub use posted::Posted;
 
-pub expires;
+mod expires;
 pub use expires::Expires;
 
-pub password;
+mod password;
 pub use password::Password;
 
-pub hits;
-pub use field::Hits;
+mod hits;
+pub use hits::Hits;
