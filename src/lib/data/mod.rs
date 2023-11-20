@@ -1,7 +1,59 @@
+pub mod model; // makes the model module available
+pub mod query;
+
 use derive_more::{Display, From};
 use serde::{Deserialize, Serialize};
+use sqlx::Sqlite;
 use std::str::FromStr;
 use uuid::Uuid;
+
+#[derive(Debug, thiserror::Error)]
+pub enum DataError {
+    #[error("database error: {0}")]
+    Database(#[from] sqlx::Error), // encapsulates all sqlx error types
+}
+
+// create data types so that in case of database change, you would have to
+// update everything database related in one place
+pub type AppDatabase = Database<Sqlite>;
+
+// pool of connections, sqlite will create
+// multiple connections to the database and constantly reuse them
+pub type DatabasePool = sqlx::sqlite::SqlitePool;
+
+// allows to roll back if there are any issues
+// if we have multiple requests to database and an error occurs during the requests
+// the transaction will allow us to roll back.
+pub type Transaction<'t> = sqlx::Transaction<'t, Sqlite>;
+
+// row and result are for returning the quest results
+pub type AppDatabaseRow = sqlx::sqlite::SqliteRow;
+pub type AppQueryResult = sqlx::sqlite::SqliteQueryResult;
+
+// request database to implement the sqlx database trait
+// and encapsulates a pool
+pub struct Database<D: sqlx::Database>(sqlx::Pool<D>);
+
+impl Database<Sqlite> {
+    pub async fn new(connection_string: &str) -> Self {
+        let pool = sqlx::sqlite::SqlitePoolOptions::new()
+            .connect(connection_string)
+            .await;
+
+        match pool {
+            Ok(pool) => Self(pool),
+            Err(e) => {
+                eprintln!("{}\n", e);
+                eprintln!("if the database has not been created, run: \n\tsqlx database setup\n");
+                panic!("database error");
+            }
+        }
+    }
+
+    pub fn get_pool(&self) -> &DatabasePool {
+        &self.0
+    }
+}
 
 #[derive(Clone, Debug, From, Display, Deserialize, Serialize)]
 pub struct DbId(Uuid);
