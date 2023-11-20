@@ -114,3 +114,15 @@ pub struct UpdateClip {
     pub(in crate::data) expires: Option<i64>,
     pub(in crate::data) password: Option<String>,
 }
+
+impl From<crate::service::ask::UpdateClip> for UpdateClip {
+    fn from(value: crate::service::ask::UpdateClip) -> Self {
+        Self {
+            shortcode: ShortCode::default().into(),
+            content: value.content.into_inner(),
+            title: value.title.into_inner(),
+            expires: value.expires.into_inner().map(|time| time.timestamp()),
+            password: value.password.into_inner(),
+        }
+    }
+}
