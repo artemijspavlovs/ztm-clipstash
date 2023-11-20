@@ -73,6 +73,12 @@ impl DbId {
     }
 }
 
+impl From<DbId> for String {
+    fn from(value: DbId) -> Self {
+        format!("{}", value.0)
+    }
+}
+
 impl Default for DbId {
     fn default() -> Self {
         Self::new()
