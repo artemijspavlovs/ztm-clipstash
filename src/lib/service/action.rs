@@ -19,3 +19,9 @@ pub async fn get_clip(req: ask::GetClip, pool: &DatabasePool) -> Result<Clip, Se
         Ok(clip)
     }
 }
+
+pub async fn new_clip(req: ask::NewClip, pool: &DatabasePool) -> Result<Clip, ServiceError> {
+    // .await - wait for the db query to finish
+    // try_into - try to convert from the data::Clip into the domain::Clip
+    Ok(query::new_clip(req, pool).await?.try_into()?)
+}
