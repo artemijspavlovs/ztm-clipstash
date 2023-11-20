@@ -1,6 +1,6 @@
 use crate::data::DbId;
 use crate::{ClipError, ShortCode, Time};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 use std::convert::TryFrom;
 use std::str::FromStr;
 
@@ -89,8 +89,22 @@ pub struct NewClip {
     pub(in crate::data) content: String,
     pub(in crate::data) title: Option<String>,
     pub(in crate::data) posted: i64,
-    pub(in crate::data) expires: Option<NaiveDateTime>,
+    pub(in crate::data) expires: Option<i64>,
     pub(in crate::data) password: Option<String>,
+}
+
+impl From<crate::service::ask::NewClip> for NewClip {
+    fn from(value: crate::service::ask::NewClip) -> Self {
+        Self {
+            clip_id: DbId::new().into(),
+            shortcode: ShortCode::default().into(),
+            content: value.content.into_inner(),
+            title: value.title.into_inner(),
+            posted: Utc::now().timestamp(),
+            expires: value.expires.into_inner().map(|time| time.timestamp()),
+            password: value.password.into_inner(),
+        }
+    }
 }
 
 pub struct UpdateClip {

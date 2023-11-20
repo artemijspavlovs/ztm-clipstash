@@ -31,3 +31,11 @@ impl From<&str> for GetClip {
         Self::from_raw(value)
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NewClip {
+    pub content: field::Content,
+    pub title: field::Title,
+    pub expires: field::Expires,
+    pub password: field::Password,
+}
