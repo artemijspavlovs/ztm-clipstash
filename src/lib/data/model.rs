@@ -61,6 +61,14 @@ pub struct GetClip {
     pub(in crate::data) shortcode: String,
 }
 
+impl From<crate::service::ask::GetClip> for GetClip {
+    fn from(value: crate::service::ask::GetClip) -> Self {
+        Self {
+            shortcode: value.shortcode.into_inner(),
+        }
+    }
+}
+
 impl From<ShortCode> for GetClip {
     fn from(value: ShortCode) -> Self {
         GetClip {
