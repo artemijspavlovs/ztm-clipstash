@@ -24,3 +24,4 @@ sqlx = {version = "0.7", features = [
     "chrono", # convert to and from datetime types
     "uuid", # convert to and from `uuid` crate types into db entities
 ]}
+handlebars = {version = "4.3", features = ["dir_source"]}

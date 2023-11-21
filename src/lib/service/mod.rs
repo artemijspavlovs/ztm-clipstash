@@ -1,6 +1,6 @@
 pub mod action;
 pub mod ask; // service layer models // service layer models
-             //
+
 use crate::{ClipError, DataError};
 
 #[derive(Debug, thiserror::Error)]
