@@ -25,3 +25,7 @@ sqlx = {version = "0.7", features = [
     "uuid", # convert to and from `uuid` crate types into db entities
 ]}
 handlebars = {version = "4.3", features = ["dir_source"]}
+rocket = {version = "0.5.0-rc.1", features = ["json"]}
+structopt = "0.3"
+dotenv = "0.15"
+tokio = "1.34"
