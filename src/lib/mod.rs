@@ -24,9 +24,11 @@ pub fn build_a_rocket(config: RocketConfig) -> Rocket<Build> {
         .manage::<AppDatabase>(config.database)
         .manage::<Renderer>(config.renderer)
         .manage::<HitCounter>(config.hit_counter)
+        .mount("/api/clip", web::api::routes())
         .mount("/", web::http::routes())
         .mount("/static", FileServer::from("static"))
         .register("/", web::http::catcher::catchers())
+        .register("/api/clip", web::api::catcher::catchers())
 }
 
 // RocketConfig represents the server configuration
