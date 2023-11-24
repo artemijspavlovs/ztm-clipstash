@@ -1,9 +1,14 @@
 use std::str::FromStr;
 
 use base64::{engine::general_purpose, Engine};
+use rocket::http::Status;
+use rocket::request::{FromRequest, Outcome, Request};
+use rocket::State;
 use rocket::{serde::json::Json, Responder};
 use serde::Serialize;
 
+use crate::data::AppDatabase;
+use crate::service::action;
 use crate::ServiceError;
 
 pub const API_KEY_HEADER: &str = "x-api-key";
@@ -76,6 +81,48 @@ impl From<ServiceError> for ApiError {
             ServiceError::NotFound => Self::UserError(Json("entity not found".to_owned())),
             ServiceError::Data(_) => Self::ServerError(Json("a server error occurred".to_owned())),
             ServiceError::PermissionError(msg) => Self::UserError(Json(msg)),
+        }
+    }
+}
+
+// enables rocket to use an API key as a request guard
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for ApiKey {
+    type Error = ApiError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        fn server_error() -> Outcome<ApiKey, ApiError> {
+            Outcome::Error((
+                Status::InternalServerError,
+                ApiError::ServerError(Json("server error".to_string())),
+            ))
+        }
+
+        fn key_error(e: ApiKeyError) -> Outcome<ApiKey, ApiError> {
+            Outcome::Error((Status::BadRequest, ApiError::KeyError(Json(e.to_string()))))
+        }
+
+        match req.headers().get_one(API_KEY_HEADER) {
+            None => key_error(ApiKeyError::NotFound("API key not found".to_string())),
+            Some(key) => {
+                let db = match req.guard::<&State<AppDatabase>>().await {
+                    Outcome::Success(db) => db,
+                    _ => return server_error(),
+                };
+
+                let api_key = match ApiKey::from_str(key) {
+                    Ok(key) => key,
+                    Err(e) => return key_error(e),
+                };
+
+                match action::is_api_key_valid(api_key.clone(), db.get_pool()).await {
+                    Ok(valid) if valid => Outcome::Success(api_key),
+                    Ok(valid) if !valid => {
+                        key_error(ApiKeyError::NotFound("API key not found".to_string()))
+                    }
+                    _ => server_error(),
+                }
+            }
         }
     }
 }
