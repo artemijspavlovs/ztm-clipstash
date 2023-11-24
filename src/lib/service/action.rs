@@ -1,5 +1,6 @@
 use crate::data::{query, DatabasePool, Transaction};
 use crate::service::ask;
+use crate::web::api::ApiKey;
 use crate::{Clip, ServiceError, ShortCode};
 use std::convert::TryInto;
 
@@ -44,4 +45,20 @@ pub async fn update_clip(req: ask::UpdateClip, pool: &DatabasePool) -> Result<Cl
     // .await - wait for the db query to finish
     // try_into - try to convert from the data::Clip into the domain::Clip
     Ok(query::update_clip(req, pool).await?.try_into()?)
+}
+
+pub async fn generate_api_key(pool: &DatabasePool) -> Result<ApiKey, ServiceError> {
+    let api_key = ApiKey::default();
+    Ok(query::save_api_key(api_key, pool).await?)
+}
+
+pub async fn revoke_api_key(
+    api_key: ApiKey,
+    pool: &DatabasePool,
+) -> Result<query::RevocationStatus, ServiceError> {
+    Ok(query::revoke_api_key(api_key, pool).await?)
+}
+
+pub async fn is_api_key_valid(api_key: ApiKey, pool: &DatabasePool) -> Result<bool, ServiceError> {
+    Ok(query::is_api_key_valid(api_key, pool).await?)
 }
