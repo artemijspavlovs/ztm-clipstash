@@ -1,9 +1,28 @@
 use super::model;
-use crate::data::{DataError, DatabasePool};
+use crate::{
+    data::{DataError, DatabasePool},
+    ShortCode,
+};
 
 // type alias on Result makes it easier to leverage a Result with DataError
 // wihout having to type it out every time
 type Result<T> = std::result::Result<T, DataError>;
+
+pub async fn increase_hit_count(
+    shortcode: &ShortCode,
+    hits: u32,
+    pool: &DatabasePool,
+) -> Result<()> {
+    let shortcode = shortcode.as_str();
+    Ok(sqlx::query!(
+        "UPDATE clips SET hits = hits + ? WHERE shortcode = ?",
+        hits,
+        shortcode
+    )
+    .execute(pool)
+    .await
+    .map(|_| ())?)
+}
 
 // `get_clip` function accepts a generic type M which should be a model::GetClip
 // Into tries to transform any data that is passed into the function into a model::GetClip
