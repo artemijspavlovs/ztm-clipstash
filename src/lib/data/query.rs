@@ -151,3 +151,46 @@ pub async fn delete_expired(pool: &DatabasePool) -> Result<u64> {
             .rows_affected(),
     )
 }
+
+#[cfg(test)]
+pub mod test {
+    use chrono::Utc;
+
+    use crate::data::test::*;
+    use crate::data::*;
+
+    use crate::test::new_async_runtime;
+
+    fn model_get_clip(shortcode: &str) -> model::GetClip {
+        model::GetClip {
+            shortcode: shortcode.into(),
+        }
+    }
+
+    fn model_new_clip(shortcode: &str) -> model::NewClip {
+        model::NewClip {
+            shortcode: shortcode.into(),
+            clip_id: DbId::new().into(),
+            content: format!("content for clip '{}'", shortcode),
+            title: None,
+            posted: Utc::now().timestamp(),
+            expires: None,
+            password: None,
+        }
+    }
+
+    #[test]
+    fn clip_new_and_get() {
+        let rt = new_async_runtime();
+        let db = new_db(rt.handle());
+        let pool = db.get_pool();
+
+        let clip = rt.block_on(async move { super::new_clip(model_new_clip("1"), pool).await });
+
+        assert!(clip.is_ok());
+
+        let clip = clip.unwrap();
+        assert!(clip.shortcode == "1");
+        assert!(clip.content == format!("content for clip '1'"));
+    }
+}
