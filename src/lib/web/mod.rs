@@ -30,3 +30,37 @@ impl From<serde_json::Error> for PageError {
         PageError::Serialization(format!("{}", err))
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use crate::test::new_async_runtime;
+    use crate::RocketConfig;
+
+    // local client that can be used for tests
+    use rocket::local::blocking::Client;
+
+    pub fn new_rocket_config() -> RocketConfig {
+        use crate::web::{hitcounter::HitCounter, renderer::Renderer};
+
+        let rt = new_async_runtime();
+        let renderer = Renderer::new("templates/".into());
+        let database = crate::data::test::new_db(rt.handle());
+        let maintenance = crate::domain::maintenance::Maintenance::spawn(
+            database.get_pool().clone(),
+            rt.handle().clone(),
+        );
+        let hit_counter = HitCounter::new(database.get_pool().clone(), rt.handle().clone());
+
+        RocketConfig {
+            renderer,
+            database,
+            hit_counter,
+            maintenance,
+        }
+    }
+
+    pub fn new_rocket_client() -> Client {
+        let config = new_rocket_config();
+        Client::tracked(crate::build_a_rocket(config)).expect("failed to build a rocket instance")
+    }
+}
