@@ -40,3 +40,12 @@ pub struct RocketConfig {
     pub hit_counter: HitCounter,
     pub maintenance: Maintenance,
 }
+
+#[cfg(test)]
+pub mod test {
+    // new_async_runtime is helper function to spawn a new tokio runtime for tests
+    // this is required in all tests related with database because the db runtime is async
+    pub fn new_async_runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Runtime::new().expect("failed to spawn tokio runtime")
+    }
+}

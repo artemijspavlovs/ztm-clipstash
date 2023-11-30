@@ -91,3 +91,27 @@ impl FromStr for DbId {
         Ok(DbId(Uuid::parse_str(s)?))
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use crate::data::*;
+    use tokio::runtime::Handle;
+
+    // new_db is a helper function to create a database instance for tests
+    pub fn new_db(handle: &Handle) -> AppDatabase {
+        use sqlx::migrate::Migrator;
+        use std::path::Path;
+
+        handle.block_on(async move {
+            // for databases other then sqlite - create a transaction or a checkpoint instead of a
+            // database
+            let db = AppDatabase::new(":memory:").await;
+            let migrator = Migrator::new(Path::new("./migrations")).await.unwrap();
+            let pool = db.get_pool();
+
+            migrator.run(pool).await.unwrap();
+
+            db
+        })
+    }
+}
